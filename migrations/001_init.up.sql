@@ -1,0 +1,82 @@
+CREATE TABLE IF NOT EXISTS users (
+    id BIGSERIAL PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    role VARCHAR(50) NOT NULL DEFAULT 'USER',
+    subscription_type VARCHAR(50) NOT NULL DEFAULT 'FREE',
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token VARCHAR(500) NOT NULL UNIQUE,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS artists (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS albums (
+    id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    artist_id BIGINT NOT NULL REFERENCES artists(id) ON DELETE CASCADE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    UNIQUE(title, artist_id)
+);
+
+CREATE TABLE IF NOT EXISTS genres (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS tracks (
+    id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    artist_id BIGINT NOT NULL REFERENCES artists(id) ON DELETE CASCADE,
+    album_id BIGINT REFERENCES albums(id) ON DELETE SET NULL,
+    genre_id BIGINT REFERENCES genres(id) ON DELETE SET NULL,
+    duration_seconds INT NOT NULL CHECK (duration_seconds > 0),
+    file_url VARCHAR(500) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS playlists (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS playlist_tracks (
+    playlist_id BIGINT NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
+    track_id BIGINT NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+    added_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (playlist_id, track_id)
+);
+
+CREATE TABLE IF NOT EXISTS favorites (
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    track_id BIGINT NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (user_id, track_id)
+);
+
+CREATE TABLE IF NOT EXISTS listening_history (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    track_id BIGINT NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+    listened_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_listening_history_user_listened_at 
+ON listening_history (user_id, listened_at DESC);

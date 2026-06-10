@@ -1,0 +1,11 @@
+DROP INDEX IF EXISTS idx_listening_history_user_listened_at;
+DROP TABLE IF EXISTS listening_history;
+DROP TABLE IF EXISTS favorites;
+DROP TABLE IF EXISTS playlist_tracks;
+DROP TABLE IF EXISTS playlists;
+DROP TABLE IF EXISTS tracks;
+DROP TABLE IF EXISTS genres;
+DROP TABLE IF EXISTS albums;
+DROP TABLE IF EXISTS artists;
+DROP TABLE IF EXISTS refresh_tokens;
+DROP TABLE IF EXISTS users;

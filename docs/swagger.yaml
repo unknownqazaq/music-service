@@ -1,0 +1,1004 @@
+basePath: /api/v1
+definitions:
+  internal_features_auth_handler.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  internal_features_auth_handler.RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      username:
+        minLength: 3
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
+  internal_features_auth_handler.TokenResponse:
+    properties:
+      access_token:
+        type: string
+    type: object
+  internal_features_playlists_handler.CreatePlaylistRequest:
+    properties:
+      description:
+        type: string
+      title:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - title
+    type: object
+  internal_features_subscriptions_handler.UpdateSubscriptionRequest:
+    properties:
+      subscription_type:
+        enum:
+        - FREE
+        - PREMIUM
+        type: string
+    required:
+    - subscription_type
+    type: object
+  internal_features_tracks_handler.CreateTrackRequest:
+    properties:
+      album_id:
+        type: integer
+      artist_id:
+        type: integer
+      duration_seconds:
+        type: integer
+      file_url:
+        type: string
+      genre_id:
+        type: integer
+      is_active:
+        type: boolean
+      title:
+        maxLength: 200
+        minLength: 1
+        type: string
+    required:
+    - artist_id
+    - duration_seconds
+    - file_url
+    - title
+    type: object
+  music-service_internal_core_response.ErrorResponse:
+    properties:
+      error:
+        type: string
+      message:
+        type: string
+    type: object
+  music-service_internal_features_history_model.HistoryEntry:
+    properties:
+      artist_name:
+        type: string
+      id:
+        type: integer
+      listened_at:
+        type: string
+      track_id:
+        type: integer
+      track_title:
+        type: string
+    type: object
+  music-service_internal_features_playlists_model.Playlist:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  music-service_internal_features_tracks_model.Track:
+    properties:
+      album_id:
+        type: integer
+      album_title:
+        type: string
+      artist_id:
+        type: integer
+      artist_name:
+        description: Join fields
+        type: string
+      created_at:
+        type: string
+      duration_seconds:
+        type: integer
+      file_url:
+        type: string
+      genre_id:
+        type: integer
+      genre_name:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      title:
+        type: string
+    type: object
+  music-service_internal_features_users_model.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      role:
+        type: string
+      subscription_type:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a music subscription service server.
+  title: Music Subscription Service API
+  version: "1.0"
+paths:
+  /admin/tracks:
+    post:
+      consumes:
+      - application/json
+      description: Create a new music track (ADMIN only)
+      parameters:
+      - description: Track configuration payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_features_tracks_handler.CreateTrackRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/music-service_internal_features_tracks_model.Track'
+        "400":
+          description: Invalid request body or missing required fields
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "403":
+          description: Forbidden (ADMIN required)
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new track
+      tags:
+      - admin
+  /admin/tracks/{id}:
+    delete:
+      description: Soft delete a music track by ID (ADMIN only)
+      parameters:
+      - description: Track ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content (Track successfully deleted)
+        "400":
+          description: Invalid track ID
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "403":
+          description: Forbidden (ADMIN required)
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "404":
+          description: Track not found
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a track
+      tags:
+      - admin
+    put:
+      consumes:
+      - application/json
+      description: Update details of a music track (ADMIN only)
+      parameters:
+      - description: Track ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated track configuration payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_features_tracks_handler.CreateTrackRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/music-service_internal_features_tracks_model.Track'
+        "400":
+          description: Invalid payload or ID
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "403":
+          description: Forbidden (ADMIN required)
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "404":
+          description: Track not found
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a track
+      tags:
+      - admin
+  /admin/users/{id}/subscription:
+    patch:
+      consumes:
+      - application/json
+      description: 'Update the subscription type of a user (ADMIN only). Types: FREE,
+        PREMIUM.'
+      parameters:
+      - description: User ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated subscription payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_features_subscriptions_handler.UpdateSubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success response
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid payload or ID
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "403":
+          description: Forbidden (ADMIN required)
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user subscription
+      tags:
+      - admin
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login with email and password to receive a JWT access token
+      parameters:
+      - description: Credentials payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_features_auth_handler.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_features_auth_handler.TokenResponse'
+        "400":
+          description: Invalid payload
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      summary: Authenticate user and retrieve token
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user in the system with email, password, and username
+      parameters:
+      - description: Registration payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_features_auth_handler.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/music-service_internal_features_users_model.User'
+        "400":
+          description: Invalid payload
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "409":
+          description: Conflict (Email or Username already taken)
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - auth
+  /favorites/tracks:
+    get:
+      description: Get all tracks added to favorites by the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/music-service_internal_features_tracks_model.Track'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List favorites
+      tags:
+      - favorites
+  /favorites/tracks/{track_id}:
+    delete:
+      description: Remove a track by ID from the user's favorites list
+      parameters:
+      - description: Track ID
+        format: int64
+        in: path
+        name: track_id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content (Track successfully removed from favorites)
+        "400":
+          description: Invalid track ID
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "404":
+          description: Track not found in favorites
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remove track from favorites
+      tags:
+      - favorites
+    post:
+      description: Add a track by ID to the user's favorites list. FREE users can
+        add up to 20 favorites.
+      parameters:
+      - description: Track ID
+        format: int64
+        in: path
+        name: track_id
+        required: true
+        type: integer
+      responses:
+        "201":
+          description: Created (Track added to favorites)
+        "400":
+          description: Invalid track ID
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "403":
+          description: Forbidden (Favorites limit exceeded)
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "409":
+          description: Conflict (Track already in favorites)
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Add track to favorites
+      tags:
+      - favorites
+  /listening-history:
+    get:
+      description: Get a log of all songs listened to by the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/music-service_internal_features_history_model.HistoryEntry'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get listening history
+      tags:
+      - history
+  /playlists:
+    get:
+      description: Get all playlists created by the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/music-service_internal_features_playlists_model.Playlist'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List playlists
+      tags:
+      - playlists
+    post:
+      consumes:
+      - application/json
+      description: Create a new playlist for the current user. FREE users can create
+        up to 3 playlists.
+      parameters:
+      - description: Playlist creation payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_features_playlists_handler.CreatePlaylistRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/music-service_internal_features_playlists_model.Playlist'
+        "400":
+          description: Invalid payload or missing title
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "403":
+          description: Forbidden (Playlist limit exceeded)
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a playlist
+      tags:
+      - playlists
+  /playlists/{id}:
+    delete:
+      description: Delete a user's playlist by ID. Users can only delete their own
+        playlists.
+      parameters:
+      - description: Playlist ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content (Playlist successfully deleted)
+        "400":
+          description: Invalid playlist ID
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "403":
+          description: Forbidden (Not owner of the playlist)
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "404":
+          description: Playlist not found
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a playlist
+      tags:
+      - playlists
+    get:
+      description: Get detailed information of a user's playlist by ID. Users can
+        only get their own playlists.
+      parameters:
+      - description: Playlist ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/music-service_internal_features_playlists_model.Playlist'
+        "400":
+          description: Invalid playlist ID
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "403":
+          description: Forbidden (Not owner of the playlist)
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "404":
+          description: Playlist not found
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get a playlist by ID
+      tags:
+      - playlists
+    put:
+      consumes:
+      - application/json
+      description: Update the title and description of a user's playlist. Users can
+        only update their own playlists.
+      parameters:
+      - description: Playlist ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated playlist payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_features_playlists_handler.CreatePlaylistRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/music-service_internal_features_playlists_model.Playlist'
+        "400":
+          description: Invalid payload or ID
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "403":
+          description: Forbidden (Not owner of the playlist)
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "404":
+          description: Playlist not found
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a playlist
+      tags:
+      - playlists
+  /playlists/{playlist_id}/tracks/{track_id}:
+    delete:
+      description: Remove a track by ID from a user's playlist by ID. Users can only
+        modify their own playlists.
+      parameters:
+      - description: Playlist ID
+        format: int64
+        in: path
+        name: playlist_id
+        required: true
+        type: integer
+      - description: Track ID
+        format: int64
+        in: path
+        name: track_id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content (Track successfully removed from playlist)
+        "400":
+          description: Invalid playlist ID or track ID
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "403":
+          description: Forbidden (Not owner of the playlist)
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "404":
+          description: Playlist not found
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remove a track from a playlist
+      tags:
+      - playlists
+    post:
+      description: Add a track by ID to a user's playlist by ID. Users can only modify
+        their own playlists.
+      parameters:
+      - description: Playlist ID
+        format: int64
+        in: path
+        name: playlist_id
+        required: true
+        type: integer
+      - description: Track ID
+        format: int64
+        in: path
+        name: track_id
+        required: true
+        type: integer
+      responses:
+        "201":
+          description: Created (Track added to playlist)
+        "400":
+          description: Invalid playlist ID or track ID
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "403":
+          description: Forbidden (Not owner of the playlist)
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "404":
+          description: Playlist not found
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "409":
+          description: Conflict (Track already in playlist)
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Add a track to a playlist
+      tags:
+      - playlists
+  /tracks:
+    get:
+      description: Get a paginated list of active music tracks
+      parameters:
+      - description: Limit (default 20)
+        in: query
+        name: limit
+        type: integer
+      - description: Page (default 1)
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/music-service_internal_features_tracks_model.Track'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List tracks
+      tags:
+      - tracks
+  /tracks/{id}:
+    get:
+      description: Get detailed information of a track by ID (cached via Redis)
+      parameters:
+      - description: Track ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/music-service_internal_features_tracks_model.Track'
+        "400":
+          description: Invalid track ID
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "404":
+          description: Track not found
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get a track by ID
+      tags:
+      - tracks
+  /tracks/{id}/play:
+    post:
+      description: Listen to a track by ID. For FREE accounts, this is limited to
+        10 plays per day.
+      parameters:
+      - description: Track ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/music-service_internal_features_tracks_model.Track'
+        "400":
+          description: Invalid track ID
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "403":
+          description: Forbidden (Daily listening limit exceeded)
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "404":
+          description: Track not found
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Play a track
+      tags:
+      - tracks
+  /tracks/search:
+    get:
+      description: Search active tracks by title or artist name
+      parameters:
+      - description: Search query
+        in: query
+        name: query
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/music-service_internal_features_tracks_model.Track'
+            type: array
+        "400":
+          description: Query parameter is required
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Search tracks
+      tags:
+      - tracks
+  /users/me:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed profile information of the currently authenticated
+        user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/music-service_internal_features_users_model.User'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get current user profile
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    description: 'ВАЖНО: вводите токен с префиксом "Bearer ". Пример: Bearer eyJhbGci...'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
