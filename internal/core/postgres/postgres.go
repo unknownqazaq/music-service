@@ -16,6 +16,7 @@ func NewConnection(host, port, user, password, dbname, sslmode string) (*sqlx.DB
 	return db, nil
 }
 
+// NewConnectionFromURL establishes a connection using a single DSN string (useful for cloud environments like Fly.io)
 func NewConnectionFromURL(databaseURL string) (*sqlx.DB, error) {
 	db, err := sqlx.Connect("pgx", databaseURL)
 	if err != nil {
