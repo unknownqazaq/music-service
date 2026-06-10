@@ -15,3 +15,12 @@ func NewConnection(host, port, user, password, dbname, sslmode string) (*sqlx.DB
 	}
 	return db, nil
 }
+
+func NewConnectionFromURL(databaseURL string) (*sqlx.DB, error) {
+	db, err := sqlx.Connect("pgx", databaseURL)
+	if err != nil {
+		return nil, fmt.Errorf("connect to postgres via url: %w", err)
+	}
+	return db, nil
+}
+

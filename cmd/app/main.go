@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jmoiron/sqlx"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"go.uber.org/zap"
 
@@ -63,7 +64,12 @@ func main() {
 	log.Info("starting application", zap.String("env", cfg.Env))
 
 	// 3. Connect to Postgres
-	db, err := postgres.NewConnection(cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBSSLMode)
+	var db *sqlx.DB
+	if cfg.DatabaseURL != "" {
+		db, err = postgres.NewConnectionFromURL(cfg.DatabaseURL)
+	} else {
+		db, err = postgres.NewConnection(cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBSSLMode)
+	}
 	if err != nil {
 		log.Fatal("failed to connect to database", zap.Error(err))
 	}

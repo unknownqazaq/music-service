@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	DatabaseURL        string
 	AppPort            string
 	Env                string
 	DBHost             string
@@ -28,6 +29,7 @@ type Config struct {
 
 func Load() *Config {
 	return &Config{
+		DatabaseURL:        getEnv("DATABASE_URL", ""),
 		AppPort:            getEnv("APP_PORT", "8080"),
 		Env:                getEnv("ENV", "development"),
 		DBHost:             getEnv("DB_HOST", "localhost"),
