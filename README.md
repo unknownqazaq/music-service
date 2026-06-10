@@ -214,3 +214,43 @@ migrations/                  # SQL миграции
 docs/                        # Swagger документация
 frontend/                    # Веб-интерфейс
 ```
+
+## Деплой на Fly.io и CI/CD
+
+Проект настроен для автоматического деплоя на платформу **Fly.io** при коммите в ветку `main` в GitLab.
+
+### Локальный запуск деплоя
+
+1. Установите CLI-инструмент `flyctl`:
+   ```bash
+   brew install flyctl
+   ```
+2. Авторизуйтесь под своим аккаунтом:
+   ```bash
+   flyctl auth login
+   ```
+3. Инициализируйте проект в Fly (если приложение еще не создано):
+   ```bash
+   flyctl launch
+   ```
+4. Создайте базу данных Postgres и Redis в Fly.io и свяжите их с приложением, либо настройте переменные окружения вручную:
+   ```bash
+   flyctl secrets set DB_HOST=... DB_USER=... DB_PASSWORD=... DB_NAME=...
+   flyctl secrets set REDIS_HOST=... REDIS_PORT=... REDIS_PASSWORD=...
+   flyctl secrets set JWT_ACCESS_SECRET=... JWT_REFRESH_SECRET=...
+   ```
+5. Запустите деплой вручную:
+   ```bash
+   flyctl deploy
+   ```
+
+### GitLab CI/CD
+
+В проекте настроен пайплайн в файле `.gitlab-ci.yml`, состоящий из двух этапов:
+1.  **test:** Запуск всех юнит-тестов (интеграционные тесты БД пропускаются в режиме `-short`).
+2.  **deploy:** Автоматический деплой на Fly.io при слиянии/пуше в ветку `main`.
+
+Для работы автоматического деплоя необходимо добавить токен авторизации в GitLab CI/CD:
+1. Зайдите в GitLab: **Settings** → **CI/CD** → **Variables**.
+2. Добавьте переменную `FLY_API_TOKEN`. В качестве значения укажите токен доступа, полученный через команду `flyctl auth token` или в панели управления Fly.io.
+
