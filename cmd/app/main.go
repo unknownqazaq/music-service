@@ -155,6 +155,7 @@ func main() {
 
 			// Users Profile
 			r.Get("/users/me", userHandler.GetMe)
+			r.Patch("/users/me", userHandler.UpdateProfile)
 
 			// Catalog View & Play
 			r.Get("/tracks", trackHandler.ListTracks)

@@ -10,6 +10,7 @@ type UserRepository interface {
 	GetByID(ctx context.Context, id int64) (*model.User, error)
 	GetByEmail(ctx context.Context, email string) (*model.User, error)
 	UpdateSubscription(ctx context.Context, id int64, subscriptionType string) error
+	UpdateProfile(ctx context.Context, id int64, email, username *string) (*model.User, error)
 }
 
 type UserService struct {

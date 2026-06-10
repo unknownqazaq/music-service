@@ -89,3 +89,32 @@ func (r *UserRepository) UpdateSubscription(ctx context.Context, id int64, subsc
 	return nil
 }
 
+func (r *UserRepository) UpdateProfile(ctx context.Context, id int64, email, username *string) (*model.User, error) {
+	query := `
+		UPDATE users 
+		SET 
+			email = COALESCE($1, email), 
+			username = COALESCE($2, username), 
+			updated_at = NOW() 
+		WHERE id = $3
+		RETURNING id, email, username, role, subscription_type, created_at, updated_at
+	`
+	var updated model.User
+	err := r.db.QueryRowxContext(ctx, query, email, username, id).StructScan(&updated)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+		errStr := err.Error()
+		if strings.Contains(errStr, "users_email_key") {
+			return nil, ErrEmailAlreadyTaken
+		}
+		if strings.Contains(errStr, "users_username_key") {
+			return nil, ErrUsernameTaken
+		}
+		return nil, fmt.Errorf("update user profile: %w", err)
+	}
+	return &updated, nil
+}
+
+

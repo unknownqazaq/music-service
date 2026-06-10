@@ -147,3 +147,84 @@ func TestUserRepository_Create_DuplicateEmail(t *testing.T) {
 	_, err = repository.Create(context.Background(), u2)
 	require.ErrorIs(t, err, repo.ErrEmailAlreadyTaken)
 }
+
+func TestUserRepository_UpdateProfile_Success(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	repository := repo.NewUserRepository(db)
+
+	u := &model.User{
+		Email:            "original@music.com",
+		PasswordHash:     "hash",
+		Username:         "originaluser",
+		Role:             model.RoleUser,
+		SubscriptionType: model.SubscriptionFree,
+	}
+	created, err := repository.Create(context.Background(), u)
+	require.NoError(t, err)
+
+	// Update username only
+	newUsername := "updateduser"
+	updated, err := repository.UpdateProfile(context.Background(), created.ID, nil, &newUsername)
+	require.NoError(t, err)
+	assert.Equal(t, newUsername, updated.Username)
+	assert.Equal(t, created.Email, updated.Email)
+
+	// Update email only
+	newEmail := "updated@music.com"
+	updated, err = repository.UpdateProfile(context.Background(), created.ID, &newEmail, nil)
+	require.NoError(t, err)
+	assert.Equal(t, newEmail, updated.Email)
+	assert.Equal(t, newUsername, updated.Username)
+
+	// Update both
+	newEmail2 := "both@music.com"
+	newUsername2 := "bothuser"
+	updated, err = repository.UpdateProfile(context.Background(), created.ID, &newEmail2, &newUsername2)
+	require.NoError(t, err)
+	assert.Equal(t, newEmail2, updated.Email)
+	assert.Equal(t, newUsername2, updated.Username)
+}
+
+func TestUserRepository_UpdateProfile_Duplicates(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	repository := repo.NewUserRepository(db)
+
+	u1, err := repository.Create(context.Background(), &model.User{
+		Email:            "user1@music.com",
+		PasswordHash:     "hash",
+		Username:         "user1",
+		Role:             model.RoleUser,
+		SubscriptionType: model.SubscriptionFree,
+	})
+	require.NoError(t, err)
+
+	u2, err := repository.Create(context.Background(), &model.User{
+		Email:            "user2@music.com",
+		PasswordHash:     "hash",
+		Username:         "user2",
+		Role:             model.RoleUser,
+		SubscriptionType: model.SubscriptionFree,
+	})
+	require.NoError(t, err)
+
+	// Update u1's email to u2's email
+	_, err = repository.UpdateProfile(context.Background(), u1.ID, &u2.Email, nil)
+	assert.ErrorIs(t, err, repo.ErrEmailAlreadyTaken)
+
+	// Update u1's username to u2's username
+	_, err = repository.UpdateProfile(context.Background(), u1.ID, nil, &u2.Username)
+	assert.ErrorIs(t, err, repo.ErrUsernameTaken)
+}
+

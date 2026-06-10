@@ -10,6 +10,20 @@ definitions:
     - email
     - password
     type: object
+  internal_features_auth_handler.LogoutRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  internal_features_auth_handler.RefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
   internal_features_auth_handler.RegisterRequest:
     properties:
       email:
@@ -28,6 +42,8 @@ definitions:
   internal_features_auth_handler.TokenResponse:
     properties:
       access_token:
+        type: string
+      refresh_token:
         type: string
     type: object
   internal_features_playlists_handler.CreatePlaylistRequest:
@@ -74,6 +90,15 @@ definitions:
     - duration_seconds
     - file_url
     - title
+    type: object
+  internal_features_users_handler.UpdateProfileRequest:
+    properties:
+      email:
+        type: string
+      username:
+        maxLength: 100
+        minLength: 3
+        type: string
     type: object
   music-service_internal_core_response.ErrorResponse:
     properties:
@@ -344,7 +369,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Login with email and password to receive a JWT access token
+      description: Login with email and password to receive a JWT access token and
+        refresh token
       parameters:
       - description: Credentials payload
         in: body
@@ -372,6 +398,73 @@ paths:
           schema:
             $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
       summary: Authenticate user and retrieve token
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Invalidates the given refresh_token so it can no longer be used
+      parameters:
+      - description: Refresh token to invalidate
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_features_auth_handler.LogoutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid payload
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      summary: Logout user
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Exchange a valid refresh_token for a new access_token and refresh_token
+        pair
+      parameters:
+      - description: Refresh token payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_features_auth_handler.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_features_auth_handler.TokenResponse'
+        "400":
+          description: Invalid payload
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "401":
+          description: Invalid or expired refresh token
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      summary: Refresh access token
       tags:
       - auth
   /auth/register:
@@ -995,9 +1088,49 @@ paths:
       summary: Get current user profile
       tags:
       - users
+    patch:
+      consumes:
+      - application/json
+      description: Update the email and/or username of the currently authenticated
+        user
+      parameters:
+      - description: Profile update payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_features_users_handler.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/music-service_internal_features_users_model.User'
+        "400":
+          description: Invalid payload
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "409":
+          description: Conflict (Email or Username already taken)
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/music-service_internal_core_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update current user profile
+      tags:
+      - users
 securityDefinitions:
   BearerAuth:
-    description: 'ВАЖНО: вводите токен с префиксом "Bearer ". Пример: Bearer eyJhbGci...'
+    description: 'Введите токен в формате: Bearer <ваш_токен>'
     in: header
     name: Authorization
     type: apiKey
