@@ -6,11 +6,12 @@ import (
 	"encoding/hex"
 	"time"
 
+	"music-service/internal/core/logger"
+	"music-service/internal/core/middleware"
+
 	"github.com/golang-jwt/jwt/v5"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
-	"music-service/internal/core/logger"
-	"music-service/internal/core/middleware"
 )
 
 type LoginInput struct {

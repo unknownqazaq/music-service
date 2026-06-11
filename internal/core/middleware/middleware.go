@@ -6,11 +6,12 @@ import (
 	"strings"
 	"time"
 
+	"music-service/internal/core/logger"
+	"music-service/internal/core/response"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
-	"music-service/internal/core/logger"
-	"music-service/internal/core/response"
 )
 
 type Claims struct {

@@ -4,10 +4,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
-	"go.uber.org/zap"
 	"music-service/internal/core/logger"
 	"music-service/internal/core/middleware"
+
+	"github.com/golang-jwt/jwt/v5"
+	"go.uber.org/zap"
 )
 
 // Refresh проверяет refresh_token и возвращает новую пару токенов.

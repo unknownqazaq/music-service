@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jmoiron/sqlx"
 	"music-service/internal/features/history/model"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type HistoryRepository struct {

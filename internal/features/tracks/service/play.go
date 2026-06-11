@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"go.uber.org/zap"
 	"music-service/internal/core/logger"
 	"music-service/internal/features/tracks/model"
+
+	"go.uber.org/zap"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -86,4 +87,3 @@ func (s *TrackService) Play(ctx context.Context, userID, trackID int64, subscrip
 
 	return track, nil
 }
-
